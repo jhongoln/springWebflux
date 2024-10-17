@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+<meta charset="UTF-8">
+<title th:text="${titulo}">Insert title here</title>
+</head>
+<body>
+	
+<div th:if="${param.error != null}" th:text="${param.error}"></div>
+<div th:if="${param.success != null}" th:text="${param.success}"></div>
+	
+<h1 th:text="${titulo}"></h1>
+<a th:href="@{/listar}">volver</a>
+
+<div>
+	<div>
+		<img th:if="${producto.foto != null && #strings.length(producto.foto)>0}" 
+		style="max-width: 25%;"
+		th:src="@{/uploads/img/} + ${producto.foto}" th:alt="${producto.foto}">
+	</div>
+	<lu>
+		<li th:text="'Nombre: '+ ${producto.nombre}"></li>
+		<li th:text="'Precio: '+ ${producto.precio}"></li>
+		<li th:text="'create: '+${producto.createAt}"></li>
+		<li th:text="'id: '+${producto.id}"></li>
+	</lu>
+</div>
+
+</body>
+</html>
