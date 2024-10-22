@@ -38,6 +38,7 @@ public class SpringBootWebfluxApirestApplication implements CommandLineRunner{
 		mongoTemplate.dropCollection("categorias").subscribe(); 
 		
 		Categorias electronico = new Categorias("Electronico");
+		electronico.setId("1");
 		Categorias Deporte = new Categorias("Deporte");
 		Categorias Computacion = new Categorias("Computacion");
 		Categorias Muebles = new Categorias("Muebles");
@@ -63,7 +64,8 @@ public class SpringBootWebfluxApirestApplication implements CommandLineRunner{
 				new Producto("HP Computador", 220.54,Computacion),
 				new Producto("Cajones", 988.2,Muebles),
 				new Producto("Teclado", 789.25,Computacion )
-				).flatMap(producto -> { 
+				).flatMap(producto -> {
+					if(producto.getNombre().equalsIgnoreCase("TV sony")) producto.setId("1");
 					producto.setCreateAt(new Date());
 					return productoService.save(producto);
 					})

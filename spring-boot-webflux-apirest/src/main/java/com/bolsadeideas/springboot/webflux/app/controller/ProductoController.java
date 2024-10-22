@@ -30,6 +30,7 @@ import org.springframework.web.bind.support.WebExchangeBindException;
 import com.bolsadeideas.springboot.webflux.app.models.documents.Producto;
 import com.bolsadeideas.springboot.webflux.app.services.ProductoService;
 
+import jakarta.validation.Valid;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
@@ -43,8 +44,26 @@ public class ProductoController {
 	@Value("${config.path.upload}")
 	private String path;
 	
+	@PostMapping("/v2")
+	public Mono<ResponseEntity<Producto>> crearConFoto(Producto producto, @RequestPart(name = "file") FilePart file){
+		
+		if(producto.getCreateAt()==null) {
+			producto.setCreateAt(new Date());
+		}
+		
+		producto.setFoto(UUID.randomUUID().toString() + "-" + file.filename()
+		.replace(" ", "")
+		.replace(":", "")
+		.replace("\\", ""));
+		
+		return file.transferTo(new File(path + producto.getFoto())).then(service.save(producto)).map(p -> ResponseEntity
+				.created(URI.create("/api/productos/".concat(p.getId())))
+				.contentType(MediaType.APPLICATION_JSON)
+				.body(p));
+	}
+	
 	@PostMapping("/upload/{id}")
-	public Mono<ResponseEntity<Producto>> upload(@PathVariable String id, @RequestPart FilePart file){
+	public Mono<ResponseEntity<Producto>> upload(@PathVariable(name="id") String id, @RequestPart(name = "file") FilePart file){
 		return service.findById(id).flatMap(p ->{
 			p.setFoto(UUID.randomUUID().toString() + "-" + file.filename()
 			.replace(" ", "")
@@ -75,7 +94,7 @@ public class ProductoController {
 	}
 	
 	@PostMapping
-	public Mono<ResponseEntity<Map<String, Object>>> crear(@Validated @RequestBody Mono<Producto> monoProducto){
+	public Mono<ResponseEntity<Map<String, Object>>> crear(@Valid @RequestBody Mono<Producto> monoProducto){
 		
 		Map<String, Object> respuesta = new HashMap<String, Object>();
 		
@@ -110,7 +129,7 @@ public class ProductoController {
 	}
 	
 	@PutMapping("/{id}")
-	public Mono<ResponseEntity<Producto>> editar(@RequestBody Producto producto, @PathVariable String id ){
+	public Mono<ResponseEntity<Producto>> editar(@RequestBody Producto producto, @PathVariable(name = "id") String id ){
 		return service.findById(id).flatMap(p -> {
 			p.setNombre(producto.getNombre());
 			p.setPrecio(producto.getPrecio());
@@ -125,7 +144,7 @@ public class ProductoController {
 	}
 	
 	@DeleteMapping("/{id}")
-	public Mono<ResponseEntity<Void>> eliminar(@PathVariable String id){
+	public Mono<ResponseEntity<Void>> eliminar(@PathVariable(name="id") String id){
 		return service.findById(id).flatMap(p -> {
 			return service.delete(p).then(Mono.just(new ResponseEntity<Void>(HttpStatus.NO_CONTENT)));
 		}).defaultIfEmpty(new ResponseEntity<Void>(HttpStatus.NOT_FOUND));
